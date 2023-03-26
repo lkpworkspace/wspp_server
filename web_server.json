@@ -1,0 +1,18 @@
+{
+    "type":"library",
+    "lib":"libweb_server.so",
+    "actor":{
+        "web_server":[
+            {
+                "instance_name":"web_server",
+                "instance_params":"",
+                "instance_config":{
+                    "server_ca":"",
+                    "server_key":"",
+                    "server_port":"80",
+                    "dst_addr":""
+                }
+            }
+        ]
+    }
+}
