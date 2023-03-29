@@ -59,6 +59,8 @@ class WebServerImpl final : public NetInterface {
 #endif
   std::string BuildJsonReq(server::connection_ptr con);
   std::shared_ptr<HttpReq> BuildPbReq(server::connection_ptr con);
+  std::vector<std::string> Split(const std::string& str, char delim);
+  bool ParseResource(const std::string& s, std::shared_ptr<HttpReq> req);
 
   std::string ca_;
   std::string key_;

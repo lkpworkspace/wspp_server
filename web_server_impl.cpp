@@ -134,9 +134,46 @@ std::string WebServerImpl::BuildJsonReq(server::connection_ptr con) {
   return v.toStyledString();
 }
 
+std::vector<std::string> WebServerImpl::Split(const std::string& str, char delim) {
+  std::vector<std::string> name_list;
+  std::string item;
+  std::stringstream ss(str);
+  while (std::getline(ss, item, delim)) {
+    name_list.push_back(item);
+  }
+  return name_list;
+}
+
+bool WebServerImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq> req) {
+  auto pos = s.find('?');
+  if (pos == s.npos) {
+    // TODO check path is ok
+    req->set_path(s);
+    return true;
+  }
+  // TODO check path is ok
+  req->set_path(s.substr(0, pos));
+  auto params_str = s.substr(pos + 1);
+  // spilt params
+  auto param_pair = Split(params_str, '&');
+  for (int i = 0; i < param_pair.size(); ++i) {
+    auto pair = Split(param_pair[i], '=');
+    if (pair.size() != 2) {
+      LOG(ERROR) << "param fmt error";
+      return false;
+    }
+    auto param = req->add_params();
+    param->set_key(pair[0]);
+    param->set_value(pair[1]);
+  }
+  return true;
+}
+
 std::shared_ptr<HttpReq> WebServerImpl::BuildPbReq(server::connection_ptr con) {
   auto req = std::make_shared<HttpReq>();
+  DLOG(INFO) << "http req: " << con->get_request().raw();
   req->set_uri(con->get_request().get_uri());
+  ParseResource(con->get_request().get_uri(), req);
   req->set_method(con->get_request().get_method());
   auto headers = con->get_request().get_headers();
   for (auto it = headers.begin(); it != headers.end(); ++it) {
