@@ -13,9 +13,9 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/app.h"
-#include "web_server_impl.h"
+#include "web_service_impl.h"
 
-class WebServer : public myframe::Actor {
+class WebService : public myframe::Actor {
  public:
   int Init(const char* param) override {
     // load config
@@ -23,18 +23,18 @@ class WebServer : public myframe::Actor {
     // register recv handle
     web_.SetRecvHandle(
       std::bind(
-        &WebServer::OnSend,
+        &WebService::OnSend,
         this,
         std::placeholders::_1,
         std::placeholders::_2));
     // web_.SetRecvHttpHandle(
     //   std::bind(
-    //     &WebServer::OnHttp,
+    //     &WebService::OnHttp,
     //     this,
     //     std::placeholders::_1));
     web_.SetRecvHttpHandle2(
       std::bind(
-        &WebServer::OnHttp2,
+        &WebService::OnHttp2,
         this,
         std::placeholders::_1));
     // listen
@@ -112,13 +112,13 @@ class WebServer : public myframe::Actor {
 
  private:
   std::string dst_addr_;
-  myframe::WebServerImpl web_;
+  myframe::WebServiceImpl web_;
 };
 
 extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
   const std::string& actor_name) {
-  if (actor_name == "web_server") {
-    return std::make_shared<WebServer>();
+  if (actor_name == "web_service") {
+    return std::make_shared<WebService>();
   }
   return nullptr;
 }

@@ -4,14 +4,14 @@ All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-#include "web_server_impl.h"
+#include "web_service_impl.h"
 
 #include <glog/logging.h>
 #include <jsoncpp/json/json.h>
 
 namespace myframe {
 
-int WebServerImpl::SetOption(NetOption opt, const std::string& val) {
+int WebServiceImpl::SetOption(NetOption opt, const std::string& val) {
   switch (opt) {
   case NetOption::kServerPort:
     port_ = std::stoi(val);
@@ -29,7 +29,7 @@ int WebServerImpl::SetOption(NetOption opt, const std::string& val) {
   return 0;
 }
 
-int WebServerImpl::Connect() {
+int WebServiceImpl::Connect() {
   // Initialize ASIO
   srv_.init_asio();
 
@@ -37,16 +37,16 @@ int WebServerImpl::Connect() {
   using std::placeholders::_1;
   using std::placeholders::_2;
   srv_.set_open_handler(
-    std::bind(&WebServerImpl::OnOpen, this, _1));
+    std::bind(&WebServiceImpl::OnOpen, this, _1));
   srv_.set_close_handler(
-    std::bind(&WebServerImpl::OnClose, this, _1));
+    std::bind(&WebServiceImpl::OnClose, this, _1));
   srv_.set_message_handler(
-    std::bind(&WebServerImpl::OnMessage, this, &srv_, _1, _2));
+    std::bind(&WebServiceImpl::OnMessage, this, &srv_, _1, _2));
   srv_.set_http_handler(
-    std::bind(&WebServerImpl::OnHttp, this, &srv_, _1));
+    std::bind(&WebServiceImpl::OnHttp, this, &srv_, _1));
 #ifdef USE_SSL
   srv_.set_tls_init_handler(
-    std::bind(&WebServerImpl::OnTlsInit, this, MOZILLA_INTERMEDIATE, _1));
+    std::bind(&WebServiceImpl::OnTlsInit, this, MOZILLA_INTERMEDIATE, _1));
 #endif
 
   srv_.set_reuse_addr(true);
@@ -61,12 +61,12 @@ int WebServerImpl::Connect() {
     return -1;
   }
 
-  th_ = std::thread(std::bind(&WebServerImpl::EventLoop, this));
+  th_ = std::thread(std::bind(&WebServiceImpl::EventLoop, this));
   th_.detach();
   return 0;
 }
 
-int WebServerImpl::Send(void* dst, const std::string& data) {
+int WebServiceImpl::Send(void* dst, const std::string& data) {
   if (conn_clis_.find(dst) == conn_clis_.end()) {
     LOG(ERROR) << "can't find conn";
     return -1;
@@ -85,22 +85,22 @@ int WebServerImpl::Send(void* dst, const std::string& data) {
   return 0;
 }
 
-int WebServerImpl::SetRecvHandle(recv_handle h) {
+int WebServiceImpl::SetRecvHandle(recv_handle h) {
   recv_handle_ = h;
   return 0;
 }
 
-int WebServerImpl::SetRecvHttpHandle(recv_http_handle h) {
+int WebServiceImpl::SetRecvHttpHandle(recv_http_handle h) {
   recv_http_handle_ = h;
   return 0;
 }
 
-int WebServerImpl::SetRecvHttpHandle2(recv_http_handle2 h) {
+int WebServiceImpl::SetRecvHttpHandle2(recv_http_handle2 h) {
   recv_http_handle2_ = h;
   return 0;
 }
 
-void WebServerImpl::EventLoop() {
+void WebServiceImpl::EventLoop() {
   // Start the ASIO io_service run loop
   srv_.run();
   LOG(INFO) << "websockets service exit";
@@ -122,7 +122,7 @@ rep:
   "body":""
 }
 */
-std::string WebServerImpl::BuildJsonReq(server::connection_ptr con) {
+std::string WebServiceImpl::BuildJsonReq(server::connection_ptr con) {
   Json::Value v;
   v["uri"] = con->get_request().get_uri();
   v["method"] = con->get_request().get_method();
@@ -134,7 +134,7 @@ std::string WebServerImpl::BuildJsonReq(server::connection_ptr con) {
   return v.toStyledString();
 }
 
-std::vector<std::string> WebServerImpl::Split(const std::string& str, char delim) {
+std::vector<std::string> WebServiceImpl::Split(const std::string& str, char delim) {
   std::vector<std::string> name_list;
   std::string item;
   std::stringstream ss(str);
@@ -144,7 +144,7 @@ std::vector<std::string> WebServerImpl::Split(const std::string& str, char delim
   return name_list;
 }
 
-bool WebServerImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq> req) {
+bool WebServiceImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq> req) {
   auto pos = s.find('?');
   if (pos == s.npos) {
     // TODO check path is ok
@@ -169,7 +169,7 @@ bool WebServerImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq>
   return true;
 }
 
-std::shared_ptr<HttpReq> WebServerImpl::BuildPbReq(server::connection_ptr con) {
+std::shared_ptr<HttpReq> WebServiceImpl::BuildPbReq(server::connection_ptr con) {
   auto req = std::make_shared<HttpReq>();
   DLOG(INFO) << "http req: " << con->get_request().raw();
   req->set_uri(con->get_request().get_uri());
@@ -185,7 +185,7 @@ std::shared_ptr<HttpReq> WebServerImpl::BuildPbReq(server::connection_ptr con) {
   return req;
 }
 
-void WebServerImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
+void WebServiceImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
   server::connection_ptr con = s->get_con_from_hdl(hdl);
 
   auto err_resp_fun = [con](int line){
@@ -227,7 +227,7 @@ void WebServerImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
   }
 }
 
-void WebServerImpl::OnMessage(
+void WebServiceImpl::OnMessage(
   server* s,
   websocketpp::connection_hdl hdl,
   message_ptr msg) {
@@ -245,7 +245,7 @@ void WebServerImpl::OnMessage(
   }
 }
 
-void WebServerImpl::OnClose(websocketpp::connection_hdl h) {
+void WebServiceImpl::OnClose(websocketpp::connection_hdl h) {
   if (conn_clis_.find(h.lock().get()) == conn_clis_.end()) {
     LOG(ERROR) << "conn is already erased";
     return;
@@ -254,7 +254,7 @@ void WebServerImpl::OnClose(websocketpp::connection_hdl h) {
   LOG(INFO) << "conn closed " << h.lock().get();
 }
 
-void WebServerImpl::OnOpen(websocketpp::connection_hdl h) {
+void WebServiceImpl::OnOpen(websocketpp::connection_hdl h) {
   if (conn_clis_.find(h.lock().get()) != conn_clis_.end()) {
     LOG(ERROR) << "conn is already in conn map";
     return;
@@ -264,7 +264,7 @@ void WebServerImpl::OnOpen(websocketpp::connection_hdl h) {
 }
 
 #ifdef USE_SSL
-WebServerImpl::context_ptr WebServerImpl::OnTlsInit(tls_mode mode, websocketpp::connection_hdl hdl) {
+WebServiceImpl::context_ptr WebServiceImpl::OnTlsInit(tls_mode mode, websocketpp::connection_hdl hdl) {
   namespace asio = websocketpp::lib::asio;
 
   LOG(INFO) << "on_tls_init called with hdl: " << hdl.lock().get();

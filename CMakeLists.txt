@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-PROJECT(web_server)
+PROJECT(web_service)
 
 #### compile setting
 SET(CMAKE_C_STANDARD 11)
@@ -33,7 +33,7 @@ LINK_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/lib)
 #### lib
 ADD_LIBRARY(${PROJECT_NAME} SHARED
     ${PROJECT_NAME}.cpp
-    web_server_impl.cpp
+    web_service_impl.cpp
 )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}
     dl pthread

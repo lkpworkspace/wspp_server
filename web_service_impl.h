@@ -18,7 +18,7 @@ Author: likepeng <likepeng0418@163.com>
 
 namespace myframe {
 
-class WebServerImpl final : public NetInterface {
+class WebServiceImpl final : public NetInterface {
 #ifdef USE_SSL
   enum tls_mode {
     MOZILLA_INTERMEDIATE = 1,

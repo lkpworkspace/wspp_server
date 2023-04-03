@@ -12,8 +12,8 @@
 
 # 模块安装
 ```sh
-git clone https://github.com/lkpworkspace/web_server.git
-cd web_server && mkdir build && cd build
+git clone https://github.com/lkpworkspace/web_service.git
+cd web_service && mkdir build && cd build
 cmake .. && make install
 ```
 
@@ -23,11 +23,11 @@ cmake .. && make install
 ```json
 {
     "type":"library",
-    "lib":"libweb_server.so",
+    "lib":"libweb_service.so",
     "actor":{
-        "web_server":[
+        "web_service":[
             {
-                "instance_name":"web_server",
+                "instance_name":"web_service",
                 "instance_params":"",
                 "instance_config":{
                     "server_ca":"",
@@ -40,7 +40,7 @@ cmake .. && make install
     }
 }
 ```
-- 模块名：actor.web_server.web_server
+- 模块名：actor.web_service.web_service
     - 模块名由3部分组成 模块类型.模块名.模块实例名
 - server_ca/server_key: 这两个选项可以不用配置
 - server_port：设置服务器监听端口号

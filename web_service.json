@@ -1,10 +1,10 @@
 {
     "type":"library",
-    "lib":"libweb_server.so",
+    "lib":"libweb_service.so",
     "actor":{
-        "web_server":[
+        "web_service":[
             {
-                "instance_name":"web_server",
+                "instance_name":"web_service",
                 "instance_params":"",
                 "instance_config":{
                     "server_ca":"",
