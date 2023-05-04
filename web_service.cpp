@@ -115,7 +115,7 @@ class WebService : public myframe::Actor {
   myframe::WebServiceImpl web_;
 };
 
-extern "C" std::shared_ptr<myframe::Actor> my_actor_create(
+extern "C" std::shared_ptr<myframe::Actor> actor_create(
   const std::string& actor_name) {
   if (actor_name == "web_service") {
     return std::make_shared<WebService>();
