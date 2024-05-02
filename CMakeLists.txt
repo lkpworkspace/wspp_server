@@ -10,7 +10,6 @@ option(WSPP_SERVER_USE_SSL "Using SSL" OFF)
 #### compile setting
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-SET(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
