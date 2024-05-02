@@ -1,10 +1,10 @@
 {
     "type":"library",
-    "lib":"libweb_service.so",
+    "lib":"libwspp_server.so",
     "actor":{
-        "web_service":[
+        "wspp_server":[
             {
-                "instance_name":"web_service",
+                "instance_name":"wspp_server",
                 "instance_params":"",
                 "instance_config":{
                     "server_ca":"",

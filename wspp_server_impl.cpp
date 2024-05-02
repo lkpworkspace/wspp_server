@@ -1,17 +1,17 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2023, likepeng
 All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
 ****************************************************************************/
-#include "web_service_impl.h"
+#include "wspp_server_impl.h"
 
 #include <glog/logging.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 namespace myframe {
 
-int WebServiceImpl::SetOption(NetOption opt, const std::string& val) {
+int WsppServerImpl::SetOption(NetOption opt, const std::string& val) {
   switch (opt) {
   case NetOption::kServerPort:
     port_ = std::stoi(val);
@@ -29,7 +29,7 @@ int WebServiceImpl::SetOption(NetOption opt, const std::string& val) {
   return 0;
 }
 
-int WebServiceImpl::Connect() {
+int WsppServerImpl::Connect() {
   // Initialize ASIO
   srv_.init_asio();
 
@@ -37,16 +37,16 @@ int WebServiceImpl::Connect() {
   using std::placeholders::_1;
   using std::placeholders::_2;
   srv_.set_open_handler(
-    std::bind(&WebServiceImpl::OnOpen, this, _1));
+    std::bind(&WsppServerImpl::OnOpen, this, _1));
   srv_.set_close_handler(
-    std::bind(&WebServiceImpl::OnClose, this, _1));
+    std::bind(&WsppServerImpl::OnClose, this, _1));
   srv_.set_message_handler(
-    std::bind(&WebServiceImpl::OnMessage, this, &srv_, _1, _2));
+    std::bind(&WsppServerImpl::OnMessage, this, &srv_, _1, _2));
   srv_.set_http_handler(
-    std::bind(&WebServiceImpl::OnHttp, this, &srv_, _1));
-#ifdef USE_SSL
+    std::bind(&WsppServerImpl::OnHttp, this, &srv_, _1));
+#ifdef WSPP_SERVER_USE_SSL
   srv_.set_tls_init_handler(
-    std::bind(&WebServiceImpl::OnTlsInit, this, MOZILLA_INTERMEDIATE, _1));
+    std::bind(&WsppServerImpl::OnTlsInit, this, MOZILLA_INTERMEDIATE, _1));
 #endif
 
   srv_.set_reuse_addr(true);
@@ -61,12 +61,12 @@ int WebServiceImpl::Connect() {
     return -1;
   }
 
-  th_ = std::thread(std::bind(&WebServiceImpl::EventLoop, this));
+  th_ = std::thread(std::bind(&WsppServerImpl::EventLoop, this));
   th_.detach();
   return 0;
 }
 
-int WebServiceImpl::Send(void* dst, const std::string& data) {
+int WsppServerImpl::Send(void* dst, const std::string& data) {
   if (conn_clis_.find(dst) == conn_clis_.end()) {
     LOG(ERROR) << "can't find conn";
     return -1;
@@ -85,22 +85,22 @@ int WebServiceImpl::Send(void* dst, const std::string& data) {
   return 0;
 }
 
-int WebServiceImpl::SetRecvHandle(recv_handle h) {
+int WsppServerImpl::SetRecvHandle(recv_handle h) {
   recv_handle_ = h;
   return 0;
 }
 
-int WebServiceImpl::SetRecvHttpHandle(recv_http_handle h) {
+int WsppServerImpl::SetRecvHttpHandle(recv_http_handle h) {
   recv_http_handle_ = h;
   return 0;
 }
 
-int WebServiceImpl::SetRecvHttpHandle2(recv_http_handle2 h) {
+int WsppServerImpl::SetRecvHttpHandle2(recv_http_handle2 h) {
   recv_http_handle2_ = h;
   return 0;
 }
 
-void WebServiceImpl::EventLoop() {
+void WsppServerImpl::EventLoop() {
   // Start the ASIO io_service run loop
   srv_.run();
   LOG(INFO) << "websockets service exit";
@@ -122,7 +122,7 @@ rep:
   "body":""
 }
 */
-std::string WebServiceImpl::BuildJsonReq(server::connection_ptr con) {
+std::string WsppServerImpl::BuildJsonReq(server::connection_ptr con) {
   Json::Value v;
   v["uri"] = con->get_request().get_uri();
   v["method"] = con->get_request().get_method();
@@ -134,7 +134,7 @@ std::string WebServiceImpl::BuildJsonReq(server::connection_ptr con) {
   return v.toStyledString();
 }
 
-std::vector<std::string> WebServiceImpl::Split(const std::string& str, char delim) {
+std::vector<std::string> WsppServerImpl::Split(const std::string& str, char delim) {
   std::vector<std::string> name_list;
   std::string item;
   std::stringstream ss(str);
@@ -144,7 +144,7 @@ std::vector<std::string> WebServiceImpl::Split(const std::string& str, char deli
   return name_list;
 }
 
-bool WebServiceImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq> req) {
+bool WsppServerImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq> req) {
   auto pos = s.find('?');
   if (pos == s.npos) {
     // TODO check path is ok
@@ -169,7 +169,7 @@ bool WebServiceImpl::ParseResource(const std::string& s, std::shared_ptr<HttpReq
   return true;
 }
 
-std::shared_ptr<HttpReq> WebServiceImpl::BuildPbReq(server::connection_ptr con) {
+std::shared_ptr<HttpReq> WsppServerImpl::BuildPbReq(server::connection_ptr con) {
   auto req = std::make_shared<HttpReq>();
   DLOG(INFO) << "http req: " << con->get_request().raw();
   req->set_uri(con->get_request().get_uri());
@@ -185,7 +185,7 @@ std::shared_ptr<HttpReq> WebServiceImpl::BuildPbReq(server::connection_ptr con) 
   return req;
 }
 
-void WebServiceImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
+void WsppServerImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
   server::connection_ptr con = s->get_con_from_hdl(hdl);
 
   auto err_resp_fun = [con](int line){
@@ -227,7 +227,7 @@ void WebServiceImpl::OnHttp(server* s, websocketpp::connection_hdl hdl) {
   }
 }
 
-void WebServiceImpl::OnMessage(
+void WsppServerImpl::OnMessage(
   server* s,
   websocketpp::connection_hdl hdl,
   message_ptr msg) {
@@ -245,7 +245,7 @@ void WebServiceImpl::OnMessage(
   }
 }
 
-void WebServiceImpl::OnClose(websocketpp::connection_hdl h) {
+void WsppServerImpl::OnClose(websocketpp::connection_hdl h) {
   if (conn_clis_.find(h.lock().get()) == conn_clis_.end()) {
     LOG(ERROR) << "conn is already erased";
     return;
@@ -254,7 +254,7 @@ void WebServiceImpl::OnClose(websocketpp::connection_hdl h) {
   LOG(INFO) << "conn closed " << h.lock().get();
 }
 
-void WebServiceImpl::OnOpen(websocketpp::connection_hdl h) {
+void WsppServerImpl::OnOpen(websocketpp::connection_hdl h) {
   if (conn_clis_.find(h.lock().get()) != conn_clis_.end()) {
     LOG(ERROR) << "conn is already in conn map";
     return;
@@ -263,8 +263,8 @@ void WebServiceImpl::OnOpen(websocketpp::connection_hdl h) {
   LOG(INFO) << "new conn " << h.lock().get();
 }
 
-#ifdef USE_SSL
-WebServiceImpl::context_ptr WebServiceImpl::OnTlsInit(tls_mode mode, websocketpp::connection_hdl hdl) {
+#ifdef WSPP_SERVER_USE_SSL
+WsppServerImpl::context_ptr WsppServerImpl::OnTlsInit(tls_mode mode, websocketpp::connection_hdl hdl) {
   namespace asio = websocketpp::lib::asio;
 
   LOG(INFO) << "on_tls_init called with hdl: " << hdl.lock().get();

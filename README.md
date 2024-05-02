@@ -7,27 +7,28 @@
     - proto模块的编译安装可以参考proto的README
 - websocketpp
     ```sh
-    sudo apt-get install libwebsocketpp-dev
+    sudo apt-get install libwebsocketpp-dev libboost-all-dev libssl-dev libprotobuf-dev
     ```
 
 # 模块安装
 ```sh
-git clone https://github.com/lkpworkspace/web_service.git
-cd web_service && mkdir build && cd build
-cmake .. && make install
+git clone https://github.com/lkpworkspace/wspp_server.git
+cd wspp_server
+cmake -S . -B build
+cmake --build build -j --config Release --target install
 ```
 
 # 模块配置
-模块默认安装在~/myframe/下,可以通过修改配置文件来配置该模块  
-路径在~/myframe/service
+模块默认安装在myframe/下,可以通过修改配置文件来配置该模块  
+路径在myframe/service
 ```json
 {
     "type":"library",
-    "lib":"libweb_service.so",
+    "lib":"libwspp_server.so",
     "actor":{
-        "web_service":[
+        "wspp_server":[
             {
-                "instance_name":"web_service",
+                "instance_name":"wspp_server",
                 "instance_params":"",
                 "instance_config":{
                     "server_ca":"",
@@ -40,7 +41,7 @@ cmake .. && make install
     }
 }
 ```
-- 模块名：actor.web_service.web_service
+- 模块名：actor.wspp_server.wspp_server
     - 模块名由3部分组成 模块类型.模块名.模块实例名
 - server_ca/server_key: 这两个选项可以不用配置
 - server_port：设置服务器监听端口号

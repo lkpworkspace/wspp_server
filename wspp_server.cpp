@@ -1,5 +1,5 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2023, likepeng
 All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
@@ -13,9 +13,9 @@ Author: likepeng <likepeng0418@163.com>
 #include "myframe/msg.h"
 #include "myframe/actor.h"
 #include "myframe/app.h"
-#include "web_service_impl.h"
+#include "wspp_server_impl.h"
 
-class WebService : public myframe::Actor {
+class WsppServer : public myframe::Actor {
  public:
   int Init(const char* param) override {
     // load config
@@ -23,18 +23,18 @@ class WebService : public myframe::Actor {
     // register recv handle
     web_.SetRecvHandle(
       std::bind(
-        &WebService::OnSend,
+        &WsppServer::OnSend,
         this,
         std::placeholders::_1,
         std::placeholders::_2));
     // web_.SetRecvHttpHandle(
     //   std::bind(
-    //     &WebService::OnHttp,
+    //     &WsppServer::OnHttp,
     //     this,
     //     std::placeholders::_1));
     web_.SetRecvHttpHandle2(
       std::bind(
-        &WebService::OnHttp2,
+        &WsppServer::OnHttp2,
         this,
         std::placeholders::_1));
     // listen
@@ -57,10 +57,11 @@ class WebService : public myframe::Actor {
       return;
     }
     auto msg = std::make_shared<myframe::Msg>();
+    msg->SetDst(dst_addr_);
     msg->SetData(data);
     msg->SetType("WEBSOCKET");
     msg->SetAnyData(src);
-    app->Send(dst_addr_, msg);
+    app->Send(msg);
   }
 
   std::string OnHttp(const std::string& req) {
@@ -70,9 +71,10 @@ class WebService : public myframe::Actor {
       return "";
     }
     auto msg = std::make_shared<myframe::Msg>();
+    msg->SetDst(dst_addr_);
     msg->SetData(req);
     msg->SetType("HTTP");
-    auto resp_msg = app->SendRequest(dst_addr_, msg);
+    auto resp_msg = app->SendRequest(msg);
     return resp_msg->GetData();
   }
 
@@ -83,9 +85,10 @@ class WebService : public myframe::Actor {
       return nullptr;
     }
     auto msg = std::make_shared<myframe::Msg>();
+    msg->SetDst(dst_addr_);
     msg->SetAnyData(req);
     msg->SetType("HTTP");
-    auto resp_msg = app->SendRequest(dst_addr_, msg);
+    auto resp_msg = app->SendRequest(msg);
     std::shared_ptr<myframe::HttpResp> resp_pb = nullptr;
     try {
       resp_pb = resp_msg->GetAnyData<std::shared_ptr<myframe::HttpResp>>();
@@ -112,13 +115,13 @@ class WebService : public myframe::Actor {
 
  private:
   std::string dst_addr_;
-  myframe::WebServiceImpl web_;
+  myframe::WsppServerImpl web_;
 };
 
 extern "C" std::shared_ptr<myframe::Actor> actor_create(
   const std::string& actor_name) {
   if (actor_name == "web_service") {
-    return std::make_shared<WebService>();
+    return std::make_shared<WsppServer>();
   }
   return nullptr;
 }

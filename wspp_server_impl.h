@@ -1,5 +1,5 @@
 /****************************************************************************
-Copyright (c) 2018, likepeng
+Copyright (c) 2023, likepeng
 All rights reserved.
 
 Author: likepeng <likepeng0418@163.com>
@@ -12,14 +12,12 @@ Author: likepeng <likepeng0418@163.com>
 #include <websocketpp/server.hpp>
 
 #include "net_interface.h"
-#include "http.pb.h"
-
-// #define USE_SSL
+#include "config.h"
 
 namespace myframe {
 
-class WebServiceImpl final : public NetInterface {
-#ifdef USE_SSL
+class WsppServerImpl final : public NetInterface {
+#ifdef WSPP_SERVER_USE_SSL
   enum tls_mode {
     MOZILLA_INTERMEDIATE = 1,
     MOZILLA_MODERN = 2
@@ -53,7 +51,7 @@ class WebServiceImpl final : public NetInterface {
     message_ptr msg);
   void OnClose(websocketpp::connection_hdl);
   void OnOpen(websocketpp::connection_hdl);
-#ifdef USE_SSL
+#ifdef WSPP_SERVER_USE_SSL
   context_ptr OnTlsInit(tls_mode mode, websocketpp::connection_hdl hdl);
   tls_mode mode_;
 #endif
