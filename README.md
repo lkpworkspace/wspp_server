@@ -33,8 +33,7 @@ cmake --build build -j --config Release --target install
                 "instance_config":{
                     "server_ca":"",
                     "server_key":"",
-                    "server_port":"80",
-                    "dst_addr":""
+                    "server_port":"80"
                 }
             }
         ]
@@ -45,7 +44,6 @@ cmake --build build -j --config Release --target install
     - 模块名由3部分组成 模块类型.模块名.模块实例名
 - server_ca/server_key: 这两个选项可以不用配置
 - server_port：设置服务器监听端口号
-- dst_addr: 配置服务器收到消息发往目的模块名称
 
 # 模块通信
 - 模块间通信使用protobuf进行通信，消息格式见 https://github.com/lkpworkspace/proto/blob/main/proto/http.proto

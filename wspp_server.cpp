@@ -45,6 +45,12 @@ class WsppServer : public myframe::Actor {
   }
 
   void Proc(const std::shared_ptr<const myframe::Msg>& msg) override {
+    // 处理订阅消息
+    if (msg->GetType() == "SUBSCRIBE") {
+      LOG(INFO) << "recv SUBSCRIBE from " << msg->GetSrc();
+      out_list_.push_back(msg->GetSrc());
+      return;
+    }
     auto handle = msg->GetAnyData<void*>();
     web_.Send(handle, msg->GetData());
   }
@@ -56,12 +62,14 @@ class WsppServer : public myframe::Actor {
       LOG(ERROR) << "app is nullptr";
       return;
     }
-    auto msg = std::make_shared<myframe::Msg>();
-    msg->SetDst(dst_addr_);
-    msg->SetData(data);
-    msg->SetType("WEBSOCKET");
-    msg->SetAnyData(src);
-    app->Send(msg);
+    for (int i = 0; i < out_list_.size(); ++i) {
+      auto msg = std::make_shared<myframe::Msg>();
+      msg->SetDst(out_list_[i]);
+      msg->SetData(data);
+      msg->SetType("WEBSOCKET");
+      msg->SetAnyData(src);
+      app->Send(msg);
+    }
   }
 
   std::string OnHttp(const std::string& req) {
@@ -70,12 +78,16 @@ class WsppServer : public myframe::Actor {
       LOG(ERROR) << "app is nullptr";
       return "";
     }
-    auto msg = std::make_shared<myframe::Msg>();
-    msg->SetDst(dst_addr_);
-    msg->SetData(req);
-    msg->SetType("HTTP");
-    auto resp_msg = app->SendRequest(msg);
-    return resp_msg->GetData();
+    // FIXME: 仅支持第一个订阅用户处理http消息
+    for (int i = 0; i < out_list_.size(); ++i) {
+      auto msg = std::make_shared<myframe::Msg>();
+      msg->SetDst(out_list_[i]);
+      msg->SetData(req);
+      msg->SetType("HTTP");
+      auto resp_msg = app->SendRequest(msg);
+      return resp_msg->GetData();
+    }
+    return "";
   }
 
   std::shared_ptr<myframe::HttpResp> OnHttp2(const std::shared_ptr<myframe::HttpReq>& req) {
@@ -84,19 +96,23 @@ class WsppServer : public myframe::Actor {
       LOG(ERROR) << "app is nullptr";
       return nullptr;
     }
-    auto msg = std::make_shared<myframe::Msg>();
-    msg->SetDst(dst_addr_);
-    msg->SetAnyData(req);
-    msg->SetType("HTTP");
-    auto resp_msg = app->SendRequest(msg);
-    std::shared_ptr<myframe::HttpResp> resp_pb = nullptr;
-    try {
-      resp_pb = resp_msg->GetAnyData<std::shared_ptr<myframe::HttpResp>>();
-    } catch (std::exception& e) {
-      LOG(ERROR) << "convert resp_msg failed, " << e.what();
-      return nullptr;
+    // FIXME: 仅支持第一个订阅用户处理http消息
+    for (int i = 0; i < out_list_.size(); ++i) {
+      auto msg = std::make_shared<myframe::Msg>();
+      msg->SetDst(out_list_[i]);
+      msg->SetAnyData(req);
+      msg->SetType("HTTP");
+      auto resp_msg = app->SendRequest(msg);
+      std::shared_ptr<myframe::HttpResp> resp_pb = nullptr;
+      try {
+        resp_pb = resp_msg->GetAnyData<std::shared_ptr<myframe::HttpResp>>();
+      } catch (std::exception& e) {
+        LOG(ERROR) << "convert resp_msg failed, " << e.what();
+        return nullptr;
+      }
+      return resp_pb;
     }
-    return resp_pb;
+    return nullptr;
   }
 
   void LoadConfig() {
@@ -110,17 +126,16 @@ class WsppServer : public myframe::Actor {
     web_.SetOption(
       myframe::NetOption::kServerPort,
       (*conf)["server_port"].asString());
-    dst_addr_ = (*conf)["dst_addr"].asString();
   }
 
  private:
-  std::string dst_addr_;
+  std::vector<std::string> out_list_;
   myframe::WsppServerImpl web_;
 };
 
 extern "C" std::shared_ptr<myframe::Actor> actor_create(
   const std::string& actor_name) {
-  if (actor_name == "web_service") {
+  if (actor_name == "wspp_server") {
     return std::make_shared<WsppServer>();
   }
   return nullptr;

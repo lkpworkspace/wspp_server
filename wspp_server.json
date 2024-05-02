@@ -9,8 +9,7 @@
                 "instance_config":{
                     "server_ca":"",
                     "server_key":"",
-                    "server_port":"80",
-                    "dst_addr":""
+                    "server_port":"80"
                 }
             }
         ]
