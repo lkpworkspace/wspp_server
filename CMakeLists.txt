@@ -14,39 +14,40 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
 #### path setting
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-SET(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
-SET(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(MYFRAME_INSTALL_SERVICE_DIR ${CMAKE_INSTALL_PREFIX}/service)
+set(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 #### dep 3rd lib
-FIND_PACKAGE(jsoncpp REQUIRED)
-FIND_PACKAGE(gflags REQUIRED)
-FIND_PACKAGE(GTest REQUIRED)
-FIND_PACKAGE(websocketpp REQUIRED)
-FIND_PACKAGE(OpenSSL)
-FIND_PACKAGE(Boost COMPONENTS system thread)
-FIND_PACKAGE(Protobuf REQUIRED)
+find_package(Threads REQUIRED)
+find_package(glog REQUIRED)
+find_package(jsoncpp REQUIRED)
+find_package(websocketpp REQUIRED)
+find_package(OpenSSL)
+find_package(Boost COMPONENTS system thread)
+find_package(Protobuf REQUIRED)
 
 #### include directory
-INCLUDE_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/include)
-INCLUDE_DIRECTORIES(${Protobuf_INCLUDE_DIRS})
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
 #### lib path
-LINK_DIRECTORIES(${CMAKE_INSTALL_PREFIX}/lib)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #### config
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
 #### lib
-ADD_LIBRARY(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} SHARED
     ${PROJECT_NAME}.cpp
     wspp_server_impl.cpp
 )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}
-    dl pthread
+target_link_libraries(${PROJECT_NAME}
+    Threads::Threads dl
     ssl crypto
     ${Boost_LIBRARIES}
-    glog gflags jsoncpp
+    JsonCpp::JsonCpp
+    glog::glog
     ${Protobuf_LIBRARIES}
     myframe
     myframe_pb
