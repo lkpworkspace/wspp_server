@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
-project(wspp_server VERSION 0.1.1)
+project(wspp_server VERSION 0.1.3)
 
 #### option
 option(WSPP_SERVER_USE_SSL "Using SSL" OFF)
@@ -20,19 +20,14 @@ set(MYFRAME_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 #### dep 3rd lib
 find_package(Threads REQUIRED)
-find_package(glog REQUIRED)
-find_package(jsoncpp REQUIRED)
 find_package(websocketpp REQUIRED)
 find_package(OpenSSL)
 find_package(Boost COMPONENTS system thread)
 find_package(Protobuf REQUIRED)
+find_package(myframe REQUIRED)
 
 #### include directory
-include_directories(${CMAKE_INSTALL_PREFIX}/include)
 include_directories(${Protobuf_INCLUDE_DIRS})
-
-#### lib path
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #### config
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
@@ -46,16 +41,13 @@ target_link_libraries(${PROJECT_NAME}
     Threads::Threads dl
     ssl crypto
     ${Boost_LIBRARIES}
-    JsonCpp::JsonCpp
-    glog::glog
     ${Protobuf_LIBRARIES}
     myframe
     myframe_pb
-    -Wl,-z,defs
 )
 
 #### install
-INSTALL(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
     ARCHIVE DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${MYFRAME_INSTALL_LIB_DIR}
