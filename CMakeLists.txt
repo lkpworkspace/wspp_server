@@ -25,6 +25,7 @@ find_package(OpenSSL)
 find_package(Boost COMPONENTS system thread)
 find_package(Protobuf REQUIRED)
 find_package(myframe REQUIRED)
+find_package(myframe_pb REQUIRED)
 
 #### include directory
 include_directories(${Protobuf_INCLUDE_DIRS})
